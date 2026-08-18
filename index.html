@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0a0e14">
+<meta name="description" content="Keval Bavisi — SOC Analyst, DFIR specialist, and malware analyst. M.S. Cybersecurity, Northeastern University. CompTIA Security+. Top 1% TryHackMe.">
+<title>Keval Bavisi | Cybersecurity Professional</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+  /* index-only: M.S. badge on stat */
+  .stat-badge { font-size: 11px; color: var(--green-dim); margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" class="brand">keval<span class="m">@portfolio</span>:~$</a>
+    <button class="menu-btn" aria-label="Toggle menu">≡</button>
+    <div class="nav-links" id="navlinks">
+      <a href="index.html">home</a>
+      <a href="about.html">about</a>
+      <a href="projects.html">projects</a>
+      <a href="blog.html">blog</a>
+      <a href="contact.html">contact</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ─── Hero ──────────────────────────────────────────── -->
+<div class="home-hero">
+  <div class="wrap">
+    <div class="term">
+      <div class="term-bar">
+        <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+        <span class="term-title">keval@portfolio: ~/whoami</span>
+      </div>
+      <div class="term-body">
+        <div><span class="t-prompt">keval@portfolio:~$</span> <span class="t-cmd">whoami</span></div>
+        <div><span id="typed"></span><span class="cursor"></span></div>
+
+        <div class="hero-name">KEVAL BAVISI</div>
+        <div class="hero-role">
+          SOC Analyst<span class="sep">|</span>DFIR<span class="sep">|</span>Malware Analysis<span class="sep">|</span>Security Automation
+        </div>
+        <div class="hero-sub">M.S. Cybersecurity &middot; Northeastern University &middot; CompTIA Security+</div>
+
+        <div class="cta-row">
+          <a href="about.html" class="cta primary"><span class="p">$</span> whoami</a>
+          <a href="projects.html" class="cta"><span class="p">$</span> ls projects/</a>
+          <a href="blog.html" class="cta"><span class="p">$</span> cat blog/</a>
+          <a href="contact.html" class="cta"><span class="p">$</span> ./contact</a>
+        </div>
+
+        <div class="socials">
+          <a href="https://github.com/keval-0502" target="_blank" rel="noopener">
+            <span class="bkt">[</span>GitHub<span class="bkt">]</span>
+          </a>
+          <a href="https://www.linkedin.com/in/keval-bavisi-303699208/" target="_blank" rel="noopener">
+            <span class="bkt">[</span>LinkedIn<span class="bkt">]</span>
+          </a>
+          <a href="https://tryhackme.com/p/Kx05" target="_blank" rel="noopener">
+            <span class="bkt">[</span>TryHackMe<span class="bkt">]</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Stats ─────────────────────────────────────────── -->
+<section>
+  <div class="wrap reveal">
+    <div class="eyebrow"><span class="c">$</span> grep -r "highlights" ./career</div>
+    <div class="stats">
+      <a href="https://tryhackme.com/p/Kx05" class="stat" target="_blank" rel="noopener">
+        <div class="big">Top 1%</div>
+        <div class="lbl">TryHackMe global ranking</div>
+      </a>
+      <div class="stat">
+        <div class="big">Security+</div>
+        <div class="lbl">CompTIA certified</div>
+      </div>
+      <a href="blog.html" class="stat">
+        <div class="big">14 / 14</div>
+        <div class="lbl">Hacker Holidays 2026 — all rooms cleared</div>
+      </a>
+      <a href="about.html" class="stat">
+        <div class="big">M.S.</div>
+        <div class="lbl">Cybersecurity &middot; Northeastern University</div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ─── Footer ───────────────────────────────────────── -->
+<footer>
+  <div class="wrap">&gt; echo "&copy; <span id="year"></span> Keval Bavisi. Built with &#9749; and terminal magic."</div>
+</footer>
+
+<script src="main.js"></script>
+<script>
+// Typing animation
+(function () {
+  var el = document.getElementById('typed');
+  if (!el) return;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    el.textContent = 'soc analyst · dfir · malware analysis · top 1% tryhackme';
+    return;
+  }
+  var text = 'soc analyst · dfir · malware analysis · top 1% tryhackme';
+  var i = 0;
+  (function t() { if (i <= text.length) { el.textContent = text.slice(0, i++); setTimeout(t, 28); } })();
+})();
+</script>
+</body>
+</html>

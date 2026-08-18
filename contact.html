@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0a0e14">
+<title>Contact | Keval Bavisi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" class="brand">keval<span class="m">@portfolio</span>:~$</a>
+    <button class="menu-btn" aria-label="Toggle menu">≡</button>
+    <div class="nav-links" id="navlinks">
+      <a href="index.html">home</a>
+      <a href="about.html">about</a>
+      <a href="projects.html">projects</a>
+      <a href="blog.html">blog</a>
+      <a href="contact.html">contact</a>
+    </div>
+  </div>
+</nav>
+
+<div class="page-hero">
+  <div class="wrap">
+    <div class="eyebrow"><span class="c">$</span> ./contact.sh --send</div>
+    <h1>get in touch</h1>
+    <p>Open to DFIR and SOC roles, security research, and interesting problems.</p>
+  </div>
+</div>
+
+<!-- ─── Contact Info ──────────────────────────────────── -->
+<section>
+  <div class="wrap reveal">
+    <div class="eyebrow"><span class="c">$</span> cat contact.json</div>
+    <h2>links</h2>
+    <div class="contact-grid">
+
+      <div class="contact-box">
+        <h3>social</h3>
+        <div class="contact-row">
+          <span class="ck">github</span>
+          <span class="cv">
+            <a href="https://github.com/keval-0502" target="_blank" rel="noopener">
+              github.com/keval-0502
+            </a>
+          </span>
+        </div>
+        <div class="contact-row">
+          <span class="ck">linkedin</span>
+          <span class="cv">
+            <a href="https://www.linkedin.com/in/keval-bavisi-303699208/" target="_blank" rel="noopener">linkedin.com/in/keval-bavisi</a>
+          </span>
+        </div>
+        <div class="contact-row">
+          <span class="ck">tryhackme</span>
+          <span class="cv">
+            <a href="https://tryhackme.com/p/Kx05" target="_blank" rel="noopener">
+              tryhackme.com/p/Kx05
+            </a>
+          </span>
+        </div>
+        <div class="contact-row">
+          <span class="ck">email</span>
+          <span class="cv">
+            <a href="mailto:YOUR@EMAIL.COM">
+              <span class="ph" title="Add your email address here">your@email.com</span>
+            </a>
+          </span>
+        </div>
+      </div>
+
+      <div class="contact-box">
+        <h3>status</h3>
+        <div class="contact-row">
+          <span class="ck">role</span>
+          <span class="cv">SOC Analyst @ StoneTurn</span>
+        </div>
+        <div class="contact-row">
+          <span class="ck">location</span>
+          <span class="cv">United States</span>
+        </div>
+        <div class="contact-row">
+          <span class="ck">open to</span>
+          <span class="cv">On-site &middot; Hybrid &middot; Remote</span>
+        </div>
+        <div class="contact-row">
+          <span class="ck">interests</span>
+          <span class="cv">DFIR roles, malware analysis, threat intelligence, security research</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ─── Interactive Terminal ──────────────────────────── -->
+<section>
+  <div class="wrap reveal">
+    <div class="eyebrow"><span class="c">$</span> ./interactive_shell.py</div>
+    <h2>terminal</h2>
+    <p style="color:var(--muted); font-size:13.5px; margin-bottom:20px;">
+      Try:
+      <span style="color:var(--green)">help</span> &middot;
+      <span style="color:var(--green)">whoami</span> &middot;
+      <span style="color:var(--green)">skills</span> &middot;
+      <span style="color:var(--green)">ctf</span> &middot;
+      <span style="color:var(--green)">certs</span> &middot;
+      <span style="color:var(--green)">contact</span> &middot;
+      <span style="color:var(--green)">clear</span>
+    </p>
+    <div class="console">
+      <div id="console-out"></div>
+      <div class="console-input" onclick="document.getElementById('ci').focus()">
+        <span class="cp">visitor@keval:~$</span>
+        <input id="ci" type="text" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Terminal input" />
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">&gt; echo "&copy; <span id="year"></span> Keval Bavisi. Built with &#9749; and terminal magic."</div>
+</footer>
+
+<script src="main.js"></script>
+<script>
+(function () {
+  var out = document.getElementById('console-out');
+  var inp = document.getElementById('ci');
+
+  function print(html, cls) {
+    var d = document.createElement('div');
+    d.className = 'cl' + (cls ? ' ' + cls : '');
+    d.innerHTML = html;
+    out.appendChild(d);
+    out.scrollTop = out.scrollHeight;
+  }
+
+  var cmds = {
+    help: function () {
+      print('<span class="ca">available commands:</span>');
+      print('&nbsp; <span class="cu">whoami</span> &nbsp;&nbsp;&nbsp;— who is this person', 'ci');
+      print('&nbsp; <span class="cu">skills</span> &nbsp;&nbsp;&nbsp;— technical skill set', 'ci');
+      print('&nbsp; <span class="cu">ctf</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;— CTF stats and activity', 'ci');
+      print('&nbsp; <span class="cu">certs</span> &nbsp;&nbsp;&nbsp;&nbsp;— certifications', 'ci');
+      print('&nbsp; <span class="cu">contact</span> &nbsp;&nbsp;— how to reach me', 'ci');
+      print('&nbsp; <span class="cu">clear</span> &nbsp;&nbsp;&nbsp;&nbsp;— clear this terminal', 'ci');
+    },
+    whoami: function () {
+      print('Keval Bavisi &mdash; SOC Analyst at StoneTurn.', 'ci');
+      print('M.S. Cybersecurity &middot; Northeastern University (Khoury College, Boston).', 'ci');
+      print('DFIR specialist. Malware analyst. Top 1% TryHackMe.', 'ci');
+    },
+    skills: function () {
+      print('<span class="ca">dfir_and_forensics</span>&nbsp;&nbsp;&rarr; SIFT, Volatility, Rekall, KAPE, WinPMEM, F-Response, OpenIOC', 'ci');
+      print('<span class="ca">malware_analysis</span>&nbsp;&nbsp;&nbsp;&rarr; Ghidra, IDA Pro, DPAPI/LSA, .NET Metadata, WMI Forensics', 'ci');
+      print('<span class="ca">security_tools</span>&nbsp;&nbsp;&nbsp;&nbsp;&rarr; Wireshark, Metasploit, Nmap, Burp Suite, Snort, Hydra', 'ci');
+      print('<span class="ca">automation_and_ai</span>&nbsp;&nbsp;&rarr; Python, Claude API, PowerShell, MITRE ATT&amp;CK, Splunk', 'ci');
+      print('<span class="ca">cloud_security</span>&nbsp;&nbsp;&nbsp;&nbsp;&rarr; AWS EC2/Cognito, Azure Key Vault, Blob Storage', 'ci');
+      print('<span class="ca">languages</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&rarr; Python, C, C#, Java, SQL, MySQL, MongoDB', 'ci');
+    },
+    ctf: function () {
+      print('<span class="cu">TryHackMe</span> &mdash; Top 1% globally.', 'ci');
+      print('<span class="cu">Hacker Holidays 2026</span> &mdash; 14/14 rooms cleared. All challenges documented.', 'ci');
+      print('Coverage: AI/LLM security, DFIR, cloud misconfiguration, web exploitation, fileless malware.', 'ci');
+      print('Writeups on <a href="blog.html" style="color:var(--green)">blog page</a> and LinkedIn.', 'ci');
+    },
+    certs: function () {
+      print('[&#10003;] CompTIA Security+ &mdash; CompTIA', 'ci');
+      print('[&#10003;] Claude Code Certification &mdash; Anthropic (2025)', 'ci');
+    },
+    contact: function () {
+      print('LinkedIn &nbsp;&rarr; <a href="https://www.linkedin.com/in/keval-bavisi-303699208/" target="_blank" style="color:var(--green)">linkedin.com/in/keval-bavisi</a>', 'ci');
+      print('GitHub &nbsp;&nbsp;&rarr; <span class="ca">github.com/keval-0502</span>', 'ci');
+      print('Email &nbsp;&nbsp;&nbsp;&rarr; <span class="ca">your@email.com</span>', 'ci');
+    },
+    clear: function () {
+      out.innerHTML = '';
+      boot(false);
+    }
+  };
+
+  function run(raw) {
+    var cmd = raw.trim().toLowerCase();
+    var safe = raw.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+    print('<span class="cu">visitor@keval:~$</span> ' + safe);
+    if (!cmd) return;
+    if (cmds[cmd]) {
+      cmds[cmd]();
+    } else {
+      print('bash: ' + safe.replace(/</g, '&lt;') + ': command not found &mdash; type <span class="ca">help</span>', 'ce');
+    }
+  }
+
+  function boot(intro) {
+    if (intro) {
+      print('<span class="ca">keval.sh</span> &mdash; portfolio shell v2.0 &middot; type <span class="cu">help</span> to get started.', 'ci');
+      print('');
+    }
+  }
+
+  inp.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+      run(inp.value);
+      inp.value = '';
+    }
+  });
+
+  boot(true);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0a0e14">
+<title>Projects | Keval Bavisi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" class="brand">keval<span class="m">@portfolio</span>:~$</a>
+    <button class="menu-btn" aria-label="Toggle menu">≡</button>
+    <div class="nav-links" id="navlinks">
+      <a href="index.html">home</a>
+      <a href="about.html">about</a>
+      <a href="projects.html">projects</a>
+      <a href="blog.html">blog</a>
+      <a href="contact.html">contact</a>
+    </div>
+  </div>
+</nav>
+
+<div class="page-hero">
+  <div class="wrap">
+    <div class="eyebrow"><span class="c">$</span> ls -la projects/</div>
+    <h1>projects</h1>
+    <p>Tools, research, and automation built in the field.</p>
+  </div>
+</div>
+
+<section>
+  <div class="wrap reveal">
+    <div class="proj-grid">
+
+      <!-- Project 1 -->
+      <div class="proj">
+        <div class="proj-head">
+          <h3>AI Malware Triage &amp; DFIR Tool</h3>
+          <span class="yr">2025</span>
+        </div>
+        <p>End-to-end malware triage pipeline built in Python. Ghidra extracts strings and metadata from binaries; the Claude API drives analysis and MITRE ATT&amp;CK mapping. A custom <strong style="color:var(--text-hi)">PromptGuard</strong> module detects prompt injection hidden in binary-derived strings — guarding the pipeline against weaponized malware samples. Results push to Splunk for dashboarding.</p>
+        <div class="ptags">
+          <span>Python</span>
+          <span>ClaudeAPI</span>
+          <span>Ghidra</span>
+          <span>MITRE-ATT&amp;CK</span>
+          <span>Splunk</span>
+          <span>PromptGuard</span>
+        </div>
+        <div class="plinks">
+          <a href="https://github.com/keval-0502/malware-triage-tool" target="_blank" rel="noopener">GitHub</a>
+          <a href="https://www.linkedin.com/in/keval-bavisi-303699208/" target="_blank" rel="noopener">LinkedIn Post</a>
+        </div>
+      </div>
+
+      <!-- Project 2 -->
+      <div class="proj">
+        <div class="proj-head">
+          <h3>Hacker Holidays 2026 &mdash; CTF Series</h3>
+          <span class="yr">2026</span>
+        </div>
+        <p>Completed all 14 rooms of TryHackMe's Hacker Holidays 2026 CTF — covering AI/LLM prompt injection, cloud misconfiguration (AWS &amp; Azure), web exploitation chains, DFIR, fileless WMI malware, and full offline DPAPI decryption from raw hive files. Each day produced a public writeup on LinkedIn documenting the attack chain from first principles.</p>
+        <div class="ptags">
+          <span>CTF</span>
+          <span>DFIR</span>
+          <span>CloudSec</span>
+          <span>AI-Security</span>
+          <span>14/14-Completed</span>
+        </div>
+        <div class="plinks">
+          <a href="blog.html">Read Writeups &rarr;</a>
+          <a href="https://www.linkedin.com/in/keval-bavisi-303699208/" target="_blank" rel="noopener">LinkedIn</a>
+        </div>
+      </div>
+
+      <!-- Project 3 -->
+      <div class="proj">
+        <div class="proj-head">
+          <h3>AMI / Smart Meter Security Assessment</h3>
+          <span class="yr"><span class="ph" title="Add year">20XX</span></span>
+        </div>
+        <p>Vulnerability assessment and penetration testing of Advanced Metering Infrastructure (AMI) and smart meter deployments conducted during internships at Siemens Energy and the Government of India. Identified critical security weaknesses in IoT-adjacent energy infrastructure — including exposed management interfaces, weak authentication, and unencrypted communications — and produced formal remediation reports.</p>
+        <div class="ptags">
+          <span>VA/PT</span>
+          <span>IoT</span>
+          <span>AMI</span>
+          <span>Nmap</span>
+          <span>Metasploit</span>
+          <span>Wireshark</span>
+        </div>
+        <div class="plinks">
+          <a href="https://www.linkedin.com/in/keval-bavisi-303699208/" target="_blank" rel="noopener">LinkedIn</a>
+        </div>
+      </div>
+
+      <!-- Project 4 -->
+      <div class="proj">
+        <div class="proj-head">
+          <h3>DFIR Interactive Study Guide</h3>
+          <span class="yr">2025</span>
+        </div>
+        <p>Interactive web-based reference guide built for SOP-based incident response interview prep. Covers the full IR lifecycle, Windows forensic artifacts (registry, event logs, prefetch, MFT), memory forensics methodology, malware analysis workflows, and verbal response templates for APT and ransomware scenarios including current cryptographic implementations.</p>
+        <div class="ptags">
+          <span>DFIR</span>
+          <span>IR-Lifecycle</span>
+          <span>Forensics</span>
+          <span>Ransomware</span>
+          <span>Windows-Artifacts</span>
+        </div>
+        <div class="plinks">
+          <a href="https://github.com/keval-0502" target="_blank" rel="noopener">GitHub</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">&gt; echo "&copy; <span id="year"></span> Keval Bavisi. Built with &#9749; and terminal magic."</div>
+</footer>
+<script src="main.js"></script>
+</body>
+</html>
