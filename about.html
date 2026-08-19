@@ -9,13 +9,22 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<style>
+.pub-list { display: flex; flex-direction: column; gap: 10px; }
+.pub { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; }
+.pub-title { color: var(--text-hi); font-size: 13.5px; font-weight: 700; margin-bottom: 5px; }
+.pub-title::before { content: "\25B8 "; color: var(--amber); }
+.pub-meta { color: var(--muted); font-size: 12px; line-height: 1.65; }
+.pub-meta a { color: var(--green); transition: color .14s; }
+.pub-meta a:hover { color: var(--green-hi); }
+</style>
 </head>
 <body>
 
 <nav>
   <div class="nav-inner">
     <a href="index.html" class="brand">keval<span class="m">@portfolio</span>:~$</a>
-    <button class="menu-btn" aria-label="Toggle menu">≡</button>
+    <button class="menu-btn" aria-label="Toggle menu">&equiv;</button>
     <div class="nav-links" id="navlinks">
       <a href="index.html">home</a>
       <a href="about.html">about</a>
@@ -34,25 +43,25 @@
   </div>
 </div>
 
-<!-- ─── Bio ────────────────────────────────────────────── -->
+<!-- Bio -->
 <section>
   <div class="wrap reveal">
     <div class="eyebrow"><span class="c">$</span> cat bio.txt</div>
     <h2>bio</h2>
     <div class="bio-grid">
       <div class="bio-text">
-        <p>I'm Keval Nitin Bavisi — a Digital Forensics &amp; Incident Response specialist and SOC Analyst at StoneTurn, with an M.S. in Cybersecurity from Northeastern University's Khoury College of Computer Sciences.</p>
-        <p>My work lives at the intersection of offensive and defensive security: malware analysis in Ghidra and IDA Pro, memory forensics with Volatility and SIFT Workstation, incident response automation with Python and the Claude API, and threat hunting across Windows artifacts.</p>
-        <p>I've interned at the Foundation for Defense of Democracies, Siemens Energy, and the Government of India — building hands-on experience across vulnerability assessment, penetration testing, and DFIR workflows. Outside of work, I compete in CTF competitions on TryHackMe (Top 1% globally) and document every challenge as a public writeup on LinkedIn.</p>
+        <p>I&rsquo;m Keval Nitin Bavisi &mdash; a Digital Forensics &amp; Incident Response specialist and SOC Analyst at StoneTurn, with an M.S. in Cybersecurity (GPA: 4.0/4.0) from Northeastern University&rsquo;s Khoury College of Computer Sciences.</p>
+        <p>My work spans the full offensive-to-defensive spectrum: malware analysis in Ghidra, IDA Pro, and FTK Imager; memory and disk forensics with Volatility, Autopsy, and SIFT Workstation; incident response automation with Python and the Claude API; and threat hunting across Windows registry hives and event logs. I also served as a Teaching Assistant at Northeastern, mentoring 70+ students in network protocols and cybersecurity.</p>
+        <p>I&rsquo;ve conducted vulnerability assessment research with Siemens Energy and the Government of India, and published peer-reviewed research on smart meter cybersecurity. Outside of work, I compete in CTF competitions on TryHackMe (Top 1% globally) and document every challenge as a public writeup on LinkedIn.</p>
       </div>
       <div class="code-block">
         <div class="cm">// profile.json</div>
         <div class="kv"><b>name</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= "Keval Nitin Bavisi"</div>
         <div class="kv"><b>role</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= "SOC Analyst @ StoneTurn"</div>
-        <div class="kv"><b>location</b>&nbsp;= "United States"</div>
+        <div class="kv"><b>location</b>&nbsp;= "Boston, MA"</div>
         <div class="kv"><b>degree</b>&nbsp;&nbsp;&nbsp;= "M.S. Cybersecurity"</div>
         <div class="kv"><b>school</b>&nbsp;&nbsp;&nbsp;= "Northeastern University"</div>
-        <div class="kv"><b>gpa</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= "<span class="ph" title="Add your GPA here">x.xx / 4.0</span>"</div>
+        <div class="kv"><b>gpa</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= "4.0 / 4.0"</div>
         <br>
         <div class="cm">// focus</div>
         <div class="kv"><b>domains</b>&nbsp;&nbsp;= [</div>
@@ -66,7 +75,7 @@
   </div>
 </section>
 
-<!-- ─── Experience ─────────────────────────────────────── -->
+<!-- Experience -->
 <section>
   <div class="wrap reveal">
     <div class="eyebrow"><span class="c">$</span> cat experience.log</div>
@@ -74,52 +83,51 @@
     <div class="timeline">
 
       <div class="tl-item">
-        <div class="tl-col">
-          <div class="tl-dot on"></div>
-          <div class="tl-line"></div>
-        </div>
+        <div class="tl-col"><div class="tl-dot on"></div><div class="tl-line"></div></div>
         <div>
           <div class="tl-role">SOC Analyst</div>
           <div class="tl-where">StoneTurn</div>
-          <div class="tl-date"><span class="ph" title="Add start date">20XX</span> &mdash; Present &middot; United States</div>
-          <div class="tl-desc">Security operations, threat detection, and incident response. Monitoring and investigating security events across client environments alongside a senior forensic and investigations team.</div>
+          <div class="tl-date">Feb 2026 &mdash; Present &middot; United States</div>
+          <div class="tl-desc">Security operations, threat detection, and incident response across client environments alongside a senior forensic and investigations team.</div>
         </div>
       </div>
 
       <div class="tl-item">
-        <div class="tl-col">
-          <div class="tl-dot"></div>
-          <div class="tl-line"></div>
-        </div>
+        <div class="tl-col"><div class="tl-dot"></div><div class="tl-line"></div></div>
         <div>
-          <div class="tl-role">Cyber Research Intern</div>
-          <div class="tl-where">Foundation for Defense of Democracies (FDD)</div>
-          <div class="tl-date"><span class="ph" title="Add dates">20XX &mdash; 20XX</span></div>
-          <div class="tl-desc">Malware analysis, threat intelligence research, and DFIR tooling development. Built automation pipelines integrating Ghidra, the Claude API, and MITRE ATT&amp;CK for binary triage and IOC generation.</div>
+          <div class="tl-role">Teaching Assistant &mdash; Computer Network Fundamentals</div>
+          <div class="tl-where">Northeastern University</div>
+          <div class="tl-date">Jan 2024 &mdash; Dec 2025 &middot; Boston, MA</div>
+          <div class="tl-desc">Mentored 70+ students in network protocols, cybersecurity concepts, and socket programming. Facilitated office hours and lab sessions twice weekly, debugging TCP/UDP and socket programming issues. Architected Wireshark-based network simulation labs covering OSI fundamentals, vulnerability assessment, and network security concepts.</div>
         </div>
       </div>
 
       <div class="tl-item">
-        <div class="tl-col">
-          <div class="tl-dot"></div>
-          <div class="tl-line"></div>
-        </div>
+        <div class="tl-col"><div class="tl-dot"></div><div class="tl-line"></div></div>
         <div>
           <div class="tl-role">Cybersecurity Intern</div>
-          <div class="tl-where">Siemens Energy &amp; Government of India</div>
-          <div class="tl-date"><span class="ph" title="Add dates">20XX &mdash; 20XX</span></div>
-          <div class="tl-desc">Vulnerability assessment and penetration testing of AMI (Advanced Metering Infrastructure) and smart meter deployments. Identified and documented security weaknesses in IoT-adjacent energy systems and produced remediation reports.</div>
+          <div class="tl-where">Foundation for Defense of Democracies (FDD)</div>
+          <div class="tl-date">May 2024 &mdash; Dec 2024 &middot; USA</div>
+          <div class="tl-desc">Investigated security incidents and enhanced threat detection accuracy by 20% through static and dynamic malware analysis. Reverse engineered DLL files with IDA Pro and Ghidra, improving proactive threat mitigation by 15%. Automated security alert triage using Python, reducing processing time by 30%. Developed incident response playbooks and compiled threat intelligence briefings.</div>
         </div>
       </div>
 
       <div class="tl-item">
-        <div class="tl-col">
-          <div class="tl-dot"></div>
+        <div class="tl-col"><div class="tl-dot"></div><div class="tl-line"></div></div>
+        <div>
+          <div class="tl-role">Vulnerability Assessment Research Engineer</div>
+          <div class="tl-where">VJTI Mumbai &mdash; Siemens Energy / Govt. of India</div>
+          <div class="tl-date">May 2022 &mdash; Apr 2023 &middot; Mumbai, India</div>
+          <div class="tl-desc">Conducted vulnerability assessment research with Siemens Energy for the Government of India, reducing cyber risk by 30% across critical infrastructure. Assessed AMI smart meter vulnerabilities using Fortify source code review and buffer overflow exploitation, reducing infrastructure vulnerability by ~27%. Delivered findings securing critical energy infrastructure deployments.</div>
         </div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-col"><div class="tl-dot"></div></div>
         <div>
           <div class="tl-role">IoT Security Intern</div>
           <div class="tl-where">NCC Telecom Pvt. Ltd.</div>
-          <div class="tl-date"><span class="ph" title="Add dates">20XX &mdash; 20XX</span></div>
+          <div class="tl-date">Dec 2019 &mdash; May 2020</div>
           <div class="tl-desc">Worked on IoT and home automation projects using ESP32 microcontrollers. Integrated security controls across connected device pipelines and assessed communication protocol security for smart home systems.</div>
         </div>
       </div>
@@ -128,7 +136,7 @@
   </div>
 </section>
 
-<!-- ─── Education ─────────────────────────────────────── -->
+<!-- Education -->
 <section>
   <div class="wrap reveal">
     <div class="eyebrow"><span class="c">$</span> cat education.log</div>
@@ -136,39 +144,31 @@
     <div class="timeline">
 
       <div class="tl-item">
-        <div class="tl-col">
-          <div class="tl-dot"></div>
-          <div class="tl-line"></div>
-        </div>
+        <div class="tl-col"><div class="tl-dot"></div><div class="tl-line"></div></div>
         <div>
           <div class="tl-role">M.S. &mdash; Cybersecurity</div>
           <div class="tl-where">Northeastern University &mdash; Khoury College of Computer Sciences</div>
-          <div class="tl-date">Boston, MA &middot; Aug 2025</div>
-          <div class="tl-desc">Focus: Digital Forensics &amp; Incident Response, Threat Detection &amp; Prevention, Malware Analysis.</div>
+          <div class="tl-date">Boston, MA &middot; Sep 2023 &mdash; Aug 2025</div>
+          <div class="tl-desc">Focus: Digital Forensics &amp; Incident Response, Threat Detection &amp; Prevention, Malware Analysis, Network Security, Offensive Security Development, Software Vulnerabilities &amp; Securities.</div>
         </div>
       </div>
 
       <div class="tl-item">
-        <div class="tl-col">
-          <div class="tl-dot"></div>
-          <div class="tl-line"></div>
-        </div>
+        <div class="tl-col"><div class="tl-dot"></div><div class="tl-line"></div></div>
         <div>
           <div class="tl-role">B.Tech &mdash; Electronics Engineering</div>
-          <div class="tl-where"><span class="ph" title="Add your institution name">Your University</span></div>
-          <div class="tl-date"><span class="ph" title="Add graduation year">20XX</span></div>
+          <div class="tl-where">DJ Sanghvi College of Engineering, Mumbai</div>
+          <div class="tl-date">2020 &mdash; 2023</div>
           <div class="tl-desc">Foundation in IoT, network security, and embedded systems design.</div>
         </div>
       </div>
 
       <div class="tl-item">
-        <div class="tl-col">
-          <div class="tl-dot"></div>
-        </div>
+        <div class="tl-col"><div class="tl-dot"></div></div>
         <div>
           <div class="tl-role">Diploma &mdash; Digital Electronics</div>
-          <div class="tl-where"><span class="ph" title="Add your institution name">Your Institution</span></div>
-          <div class="tl-date"><span class="ph" title="Add year">20XX</span></div>
+          <div class="tl-where">Shri Bhagubhai Mafatlal Polytechnic, Mumbai</div>
+          <div class="tl-date">2017 &mdash; 2020</div>
           <div class="tl-desc">Foundational coursework in digital electronics, microcontrollers, and embedded systems.</div>
         </div>
       </div>
@@ -177,7 +177,7 @@
   </div>
 </section>
 
-<!-- ─── Skills ────────────────────────────────────────── -->
+<!-- Skills -->
 <section>
   <div class="wrap reveal">
     <div class="eyebrow"><span class="c">$</span> cat skills.txt | sort</div>
@@ -194,10 +194,13 @@
           <span class="tag">F-Response</span>
           <span class="tag">Magnet RAM Capture</span>
           <span class="tag">KAPE</span>
+          <span class="tag">FTK Imager</span>
+          <span class="tag">Autopsy</span>
+          <span class="tag">RegRipper</span>
+          <span class="tag">Registry Viewer</span>
+          <span class="tag">USB Detective</span>
           <span class="tag">OpenIOC</span>
           <span class="tag">Windows Artifacts</span>
-          <span class="tag">Memory Acquisition</span>
-          <span class="tag">Hard-Disk Acquisition</span>
         </div>
       </div>
 
@@ -206,27 +209,36 @@
         <div class="tags">
           <span class="tag">Ghidra</span>
           <span class="tag">IDA Pro</span>
+          <span class="tag">PEiD</span>
+          <span class="tag">Strings</span>
+          <span class="tag">VirusTotal</span>
+          <span class="tag">Resource Hacker</span>
+          <span class="tag">GDB</span>
           <span class="tag">Static Analysis</span>
           <span class="tag">Dynamic Analysis</span>
           <span class="tag">.NET Metadata</span>
           <span class="tag">WMI Forensics</span>
           <span class="tag">DPAPI / LSA</span>
           <span class="tag">Chrome Forensics</span>
-          <span class="tag">Fileless Malware</span>
         </div>
       </div>
 
       <div class="skill-cat">
         <h3>security_tools</h3>
         <div class="tags">
+          <span class="tag">Splunk</span>
+          <span class="tag">QRadar</span>
+          <span class="tag">CrowdStrike</span>
           <span class="tag">Wireshark</span>
           <span class="tag">Metasploit</span>
           <span class="tag">Nmap</span>
           <span class="tag">Snort</span>
+          <span class="tag">Suricata</span>
           <span class="tag">Burp Suite</span>
           <span class="tag">John the Ripper</span>
           <span class="tag">Hydra</span>
           <span class="tag">Netcat</span>
+          <span class="tag">PiKVM</span>
         </div>
       </div>
 
@@ -248,8 +260,8 @@
           <span class="tag">Python</span>
           <span class="tag">Claude API</span>
           <span class="tag">PowerShell</span>
+          <span class="tag">Bash Scripting</span>
           <span class="tag">MITRE ATT&amp;CK</span>
-          <span class="tag">Splunk</span>
           <span class="tag">Prompt Injection Defense</span>
         </div>
       </div>
@@ -261,6 +273,7 @@
           <span class="tag">C</span>
           <span class="tag">C#</span>
           <span class="tag">Java</span>
+          <span class="tag">Assembly (x86)</span>
           <span class="tag">SQL</span>
           <span class="tag">MySQL</span>
           <span class="tag">MongoDB</span>
@@ -271,18 +284,18 @@
   </div>
 </section>
 
-<!-- ─── Certifications ────────────────────────────────── -->
+<!-- Certifications -->
 <section>
   <div class="wrap reveal">
     <div class="eyebrow"><span class="c">$</span> ls certifications/</div>
     <h2>certifications</h2>
-    <div class="certs-grid">
+    <div class="certs-grid" style="grid-template-columns: repeat(2,1fr); max-width: 480px;">
 
       <div class="cert">
         <div class="badge">&#127759;</div>
         <h3>CompTIA Security+</h3>
         <div class="issuer">CompTIA</div>
-        <div class="yr"><span class="ph" title="Add year earned">20XX</span></div>
+        <div class="yr">Aug 2025 &mdash; Aug 2028</div>
       </div>
 
       <div class="cert">
@@ -292,13 +305,30 @@
         <div class="yr">2025</div>
       </div>
 
-      <div class="cert" style="border-style: dashed; opacity: .45; pointer-events: none;">
-        <div class="badge">&#10133;</div>
-        <h3><span class="ph" title="Next cert here">Next Certification</span></h3>
-        <div class="issuer"><span class="ph">Issuer</span></div>
-        <div class="yr"><span class="ph">Year</span></div>
-      </div>
+    </div>
+  </div>
+</section>
 
+<!-- Publications -->
+<section>
+  <div class="wrap reveal">
+    <div class="eyebrow"><span class="c">$</span> cat publications.bib</div>
+    <h2>publications</h2>
+    <div class="pub-list">
+      <div class="pub">
+        <div class="pub-title">Cybersecurity of Smart Meters</div>
+        <div class="pub-meta">
+          Bavisi Keval Nitin &middot; IJISRT, Vol. 7, Issue 12, December 2022 &middot; ISSN 2456-2165<br>
+          <a href="https://doi.org/10.5281/zenodo.7511298" target="_blank" rel="noopener">doi.org/10.5281/zenodo.7511298</a>
+        </div>
+      </div>
+      <div class="pub">
+        <div class="pub-title">New England Power System&rsquo;s Risk and Resilience Analysis</div>
+        <div class="pub-meta">
+          Dr. Papageorge Themis, Bavisi Keval Nitin &middot; December 2023<br>
+          <a href="https://tinyurl.com/keval-CY5250-paper" target="_blank" rel="noopener">tinyurl.com/keval-CY5250-paper</a>
+        </div>
+      </div>
     </div>
   </div>
 </section>
